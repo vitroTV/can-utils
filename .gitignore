@@ -40,6 +40,7 @@ GNUmakefile.in
 /isotpserver
 /isotpsniffer
 /isotptun
+/libj1939.a
 /log2asc
 /log2long
 /slcan_attach
