@@ -23,12 +23,15 @@ noinst_HEADERS = \
 
 
 noinst_LTLIBRARIES = \
-	libcan.la
+	libcan.la \
+	libj1939.la
 
 libcan_la_SOURCES = \
 	lib.c \
 	canframelen.c
 
+libj1939_la_SOURCES = \
+	libj1939.c
 
 bin_PROGRAMS = \
 	asc2log \
@@ -50,26 +53,19 @@ bin_PROGRAMS = \
 	isotpserver \
 	isotpsniffer \
 	isotptun \
+	jacd \
+	jspy \
+	jsr \
 	log2asc \
 	log2long \
 	slcan_attach \
 	slcand \
 	slcanpty
 
-if CONFIG_J1939
-bin_PROGRAMS += \
-	jacd \
-	jspy \
-	jsr
-
 jacd_LDADD = libj1939.la
 jspy_LDADD = libj1939.la
 jsr_LDADD = libj1939.la
 
-noinst_LTLIBRARIES += libj1939.la
-
-libj1939_la_SOURCES = libj1939.c
-endif
 
 EXTRA_DIST = \
 	autogen.sh

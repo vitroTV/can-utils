@@ -106,5 +106,5 @@ log2asc:	log2asc.o	lib.o
 asc2log:	asc2log.o	lib.o
 canbusload:	canbusload.o	canframelen.o
 
-jspy: libj1939.a
-jsr: libj1939.a
+jspy:		libj1939.a
+jsr:		libj1939.a
