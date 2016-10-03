@@ -76,7 +76,6 @@ static struct {
 /*
  * usefull buffers
  */
-static const int ival_0 = 0;
 static const int ival_1 = 1;
 
 static char ctrlmsg[
