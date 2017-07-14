@@ -174,6 +174,30 @@ static int look_up_uart_speed(long int s)
 	}
 }
 
+#define DEBUG(...) printf(__VA_ARGS__); printf("\n"); fflush(stdout);
+
+int waitForCr(int fd)
+{
+	char b;
+	
+	int usecCounter = 0;
+
+	do{
+		usleep(1000);
+
+		read(fd, &b, 1);
+	
+		usecCounter += 1000;
+
+	}while(b != '\r' && usecCounter < 1000);
+
+	if(usecCounter >= 1000000){
+		return 0;
+	}
+
+	return 1;
+}
+
 int main(int argc, char *argv[])
 {
 	char *tty = NULL;
@@ -281,6 +305,7 @@ int main(int argc, char *argv[])
 
 	/* Daemonize */
 	if (run_as_daemon) {
+
 		if (daemon(0, 0)) {
 			syslogger(LOG_ERR, "failed to daemonize");
 			exit(EXIT_FAILURE);
@@ -336,24 +361,50 @@ int main(int argc, char *argv[])
 	if (speed) {
 		sprintf(buf, "C\rS%s\r", speed);
 		write(fd, buf, strlen(buf));
+
+		if( !waitForCr(fd) ){
+			syslogger(LOG_NOTICE, "failed to read CR (speed)");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	if (btr) {
 		sprintf(buf, "C\rs%s\r", btr);
 		write(fd, buf, strlen(buf));
+
+		if( !waitForCr(fd) ){
+			syslogger(LOG_NOTICE, "failed to read CR (btr)");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	if (send_read_status_flags) {
 		sprintf(buf, "F\r");
 		write(fd, buf, strlen(buf));
+
+		if( !waitForCr(fd) ){
+			syslogger(LOG_NOTICE, "failed to read CR (read_status_flags)");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	if (send_listen) {
 		sprintf(buf, "L\r");
 		write(fd, buf, strlen(buf));
+			
+		if( !waitForCr(fd) ){
+			syslogger(LOG_NOTICE, "failed to read CR (listen)");
+			exit(EXIT_FAILURE);
+		}
+
 	} else if (send_open) {
 		sprintf(buf, "O\r");
 		write(fd, buf, strlen(buf));
+
+		if( !waitForCr(fd) ){
+			syslogger(LOG_NOTICE, "failed to read CR (open)");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	/* set slcan like discipline on given tty */
@@ -369,7 +420,7 @@ int main(int argc, char *argv[])
 	}
 
 	syslogger(LOG_NOTICE, "attached TTY %s to netdevice %s\n", ttypath, buf);
-	
+
 	/* try to rename the created netdevice */
 	if (name) {
 		struct ifreq ifr;
@@ -407,6 +458,11 @@ int main(int argc, char *argv[])
 	if (send_close) {
 		sprintf(buf, "C\r");
 		write(fd, buf, strlen(buf));
+
+		if( !waitForCr(fd) ){
+			syslogger(LOG_NOTICE, "failed to read CR (close)");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	/* Reset old rates */
