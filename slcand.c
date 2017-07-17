@@ -189,7 +189,7 @@ int waitForCr(int fd)
 	
 		usecCounter += 1000;
 
-	}while(b != '\r' && usecCounter < 1000);
+	}while(b != '\r' && usecCounter < 1000000);
 
 	if(usecCounter >= 1000000){
 		return 0;
