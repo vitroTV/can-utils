@@ -176,6 +176,8 @@ static int look_up_uart_speed(long int s)
 
 #define DEBUG(...) printf(__VA_ARGS__); printf("\n"); fflush(stdout);
 
+#define READ_TIMEOUT_S 10
+
 int waitForCr(int fd)
 {
 	char b;
@@ -189,9 +191,9 @@ int waitForCr(int fd)
 	
 		usecCounter += 1000;
 
-	}while(b != '\r' && usecCounter < 1000000);
+	}while(b != '\r' && usecCounter < READ_TIMEOUT_S*1000000);
 
-	if(usecCounter >= 1000000){
+	if(usecCounter >= READ_TIMEOUT_S*1000000){
 		return 0;
 	}
 
