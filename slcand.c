@@ -180,7 +180,7 @@ static int look_up_uart_speed(long int s)
 
 int waitForCr(int fd)
 {
-	DEBUG("waitForCr: %d", fd);	
+	syslogger(LOG_INFO, __FUNCTION__);	
 
 	char b;
 	
@@ -190,7 +190,7 @@ int waitForCr(int fd)
 		usleep(100);
 
 		if(read(fd, &b, 1) != 0){
-			DEBUG("READ: %x", b);		
+			syslogger(LOG_INFO, "read: %x", (int)b);		
 		}
 	
 		usecCounter += 100;
