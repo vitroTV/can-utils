@@ -185,52 +185,42 @@ void clearInputBuffer(int fd)
 
 	ioctl(fd, FIONREAD, &bytesAvail);
 
+	syslogger(LOG_INFO, "%s available bytes: %d, flush...", __FUNCTION__, bytesAvail);
+
+	tcflush(fd, TCIFLUSH);
+
+	ioctl(fd, FIONREAD, &bytesAvail);
+
 	syslogger(LOG_INFO, "%s available bytes: %d", __FUNCTION__, bytesAvail);
+}
 
-	if(bytesAvail > 0){
-
-		void* buff = malloc(bytesAvail);
-		if( buff == NULL ){
-			syslogger(LOG_INFO, "%s failed to alloc memory", __FUNCTION__);
-			return;
-		}
-
-		int bytesRead = read(fd, buff, bytesAvail);
-
-		syslogger(LOG_INFO, "%s read bytes: %d", __FUNCTION__, bytesRead);
-
-		free(buff);
-	}
-	else{
-		
-		char buff[1000];
-
-		syslogger(LOG_INFO, "%s trying to read some data", __FUNCTION__);
+void clearOutputBuffer(int fd)
+{
+	syslogger(LOG_INFO, __FUNCTION__);
 	
-		int bytesRead = read(fd, buff, 1000);
-
-		syslogger(LOG_INFO, "%s read bytes: %d", __FUNCTION__, bytesRead);
-	}
+	tcflush(fd, TCOFLUSH);
 }
 
 int waitForCr(int fd)
 {
 	syslogger(LOG_INFO, __FUNCTION__);	
 
-	char b;
+	char ob = 0;
+	char b = 0;
 	
 	int usecCounter = 0;
 
 	do{
 		usleep(10);
 
-		if(read(fd, &b, 1) != 0){
+		if(read(fd, &b, 1) != 0 && b != ob){
+			ob = b;
 			syslogger(LOG_INFO, "read: %x", (int)b);		
 		}
 	
 		usecCounter += 10;
 
-	}while(b != '\r' && usecCounter < READ_TIMEOUT_S*1000000);
+	}while( (b != '\r') && (b != 7) && (usecCounter < READ_TIMEOUT_S*1000000) );
 
 	if(usecCounter >= READ_TIMEOUT_S*1000000){
 		return 0;
@@ -399,8 +389,19 @@ int main(int argc, char *argv[])
 	if (tcsetattr(fd, TCSADRAIN, &tios) < 0)
 		syslogger(LOG_NOTICE, "Cannot set attributes for device \"%s\": %s!\n", ttypath, strerror(errno));
 
+	write(fd, "\rC\r", 3);
+	usleep(100000);
+
 	clearInputBuffer(fd);
+	clearOutputBuffer(fd);
 	
+	write(fd, "C\r", 2);
+
+	if( !waitForCr(fd) ){
+		syslogger(LOG_NOTICE, "failed to read CR (init)");
+		exit(EXIT_FAILURE);
+	}
+
 	if (speed) {
 		sprintf(buf, "C\rS%s\r", speed);
 		write(fd, buf, strlen(buf));
