@@ -187,13 +187,13 @@ int waitForCr(int fd)
 	int usecCounter = 0;
 
 	do{
-		usleep(100);
+		usleep(10);
 
 		if(read(fd, &b, 1) != 0){
 			syslogger(LOG_INFO, "read: %x", (int)b);		
 		}
 	
-		usecCounter += 100;
+		usecCounter += 10;
 
 	}while(b != '\r' && usecCounter < READ_TIMEOUT_S*1000000);
 
