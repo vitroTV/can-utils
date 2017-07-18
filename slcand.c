@@ -180,16 +180,20 @@ static int look_up_uart_speed(long int s)
 
 int waitForCr(int fd)
 {
+	DEBUG("waitForCr: %d", fd);	
+
 	char b;
 	
 	int usecCounter = 0;
 
 	do{
-		usleep(1000);
+		usleep(100);
 
-		read(fd, &b, 1);
+		if(read(fd, &b, 1) != 0){
+			DEBUG("READ: %x", b);		
+		}
 	
-		usecCounter += 1000;
+		usecCounter += 100;
 
 	}while(b != '\r' && usecCounter < READ_TIMEOUT_S*1000000);
 
