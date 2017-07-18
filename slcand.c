@@ -178,6 +178,41 @@ static int look_up_uart_speed(long int s)
 
 #define READ_TIMEOUT_S 10
 
+void clearInputBuffer(int fd)
+{
+	syslogger(LOG_INFO, __FUNCTION__);
+	int bytesAvail = 0;
+
+	ioctl(fd, FIONREAD, &bytesAvail);
+
+	syslogger(LOG_INFO, "%s available bytes: %d", __FUNCTION__, bytesAvail);
+
+	if(bytesAvail > 0){
+
+		void* buff = malloc(bytesAvail);
+		if( buff == NULL ){
+			syslogger(LOG_INFO, "%s failed to alloc memory", __FUNCTION__);
+			return;
+		}
+
+		int bytesRead = read(fd, buff, bytesAvail);
+
+		syslogger(LOG_INFO, "%s read bytes: %d", __FUNCTION__, bytesRead);
+
+		free(buff);
+	}
+	else{
+		
+		char buff[1000];
+
+		syslogger(LOG_INFO, "%s trying to read some data", __FUNCTION__);
+	
+		int bytesRead = read(fd, buff, 1000);
+
+		syslogger(LOG_INFO, "%s read bytes: %d", __FUNCTION__, bytesRead);
+	}
+}
+
 int waitForCr(int fd)
 {
 	syslogger(LOG_INFO, __FUNCTION__);	
@@ -364,6 +399,8 @@ int main(int argc, char *argv[])
 	if (tcsetattr(fd, TCSADRAIN, &tios) < 0)
 		syslogger(LOG_NOTICE, "Cannot set attributes for device \"%s\": %s!\n", ttypath, strerror(errno));
 
+	clearInputBuffer(fd);
+	
 	if (speed) {
 		sprintf(buf, "C\rS%s\r", speed);
 		write(fd, buf, strlen(buf));
